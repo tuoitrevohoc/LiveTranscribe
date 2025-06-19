@@ -79,24 +79,92 @@ const theme = createTheme({
     h6: {
       fontWeight: 600,
     },
+    body1: { fontSize: 14 },
+    body2: { fontSize: 13 },
   },
   shape: {
-    borderRadius: 12,
+    borderRadius: 4,
   },
   components: {
     MuiCard: {
       styleOverrides: {
         root: {
-          boxShadow: "0 2px 12px 0 rgba(0,0,0,0.1)",
-          border: "1px solid rgba(0,0,0,0.08)",
+          boxShadow: "none",
+          border: "1px solid #e0e0e0",
+          borderRadius: 4,
+          padding: 0,
         },
       },
     },
     MuiButton: {
+      defaultProps: {
+        variant: "outlined",
+        size: "small",
+      },
       styleOverrides: {
         root: {
           textTransform: "none",
-          fontWeight: 600,
+          fontWeight: 500,
+          borderRadius: 4,
+          boxShadow: "none",
+          padding: "4px 12px",
+          minWidth: 0,
+        },
+      },
+    },
+    MuiToggleButton: {
+      styleOverrides: {
+        root: {
+          borderRadius: 4,
+          padding: "4px 10px",
+          fontSize: 13,
+        },
+      },
+    },
+    MuiAppBar: {
+      styleOverrides: {
+        root: {
+          boxShadow: "none",
+          borderBottom: "1px solid #e0e0e0",
+        },
+      },
+    },
+    MuiCardContent: {
+      styleOverrides: {
+        root: {
+          padding: "12px 16px",
+          "&:last-child": { paddingBottom: "12px" },
+        },
+      },
+    },
+    MuiListItem: {
+      styleOverrides: {
+        root: {
+          paddingTop: 4,
+          paddingBottom: 4,
+        },
+      },
+    },
+    MuiListItemAvatar: {
+      styleOverrides: {
+        root: {
+          minWidth: 36,
+        },
+      },
+    },
+    MuiAvatar: {
+      styleOverrides: {
+        root: {
+          width: 28,
+          height: 28,
+          fontSize: 16,
+        },
+      },
+    },
+    MuiDivider: {
+      styleOverrides: {
+        root: {
+          margin: "4px 0",
         },
       },
     },
@@ -114,14 +182,9 @@ function App() {
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
-  // Add pinyin to Chinese characters with proper tone marks
+  // Add pinyin to Chinese characters (now just returns the original text, no parentheses)
   const addPinyinToChinese = (text: string): string => {
-    const chineseRegex = /[\u4e00-\u9fff]+/g;
-
-    return text.replace(chineseRegex, (match) => {
-      const pinyinResult = pinyin(match, { toneType: "symbol", type: "array" });
-      return `${match}（${pinyinResult.join(" ")}）`;
-    });
+    return text;
   };
 
   // Initialize speech recognition
@@ -224,6 +287,40 @@ function App() {
     }
   };
 
+  // Helper to render transcription with pinyin above Chinese characters using <ruby>
+  const renderTranscriptionText = (text: string) => {
+    const chineseRegex = /([\u4e00-\u9fff]+)/g;
+    const parts = text.split(chineseRegex);
+    return (
+      <span style={{ fontSize: "2.2rem", lineHeight: 1.7 }}>
+        {parts.map((part, idx) => {
+          if (chineseRegex.test(part)) {
+            return (
+              <span className="chinese-font" key={idx}>
+                {Array.from(part).map((char, i) => {
+                  const py =
+                    pinyin(char, {
+                      toneType: "symbol",
+                      type: "array",
+                      pattern: "pinyin",
+                    })[0] || "";
+                  return (
+                    <ruby key={i} style={{ margin: "0 2px" }}>
+                      {char}
+                      <rt>{py}</rt>
+                    </ruby>
+                  );
+                })}
+              </span>
+            );
+          } else {
+            return <span key={idx}>{part}</span>;
+          }
+        })}
+      </span>
+    );
+  };
+
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
@@ -238,9 +335,9 @@ function App() {
             borderColor: "divider",
           }}
         >
-          <Toolbar>
-            <Avatar sx={{ bgcolor: "primary.main", mr: 2 }}>
-              <RecordVoiceOver />
+          <Toolbar sx={{ minHeight: 48 }}>
+            <Avatar sx={{ bgcolor: "primary.main", mr: 1 }}>
+              <RecordVoiceOver fontSize="small" />
             </Avatar>
             <Typography
               variant="h6"
@@ -248,20 +345,20 @@ function App() {
               sx={{
                 flexGrow: 1,
                 color: "text.primary",
-                fontSize: { xs: 18, sm: 22 },
+                fontSize: { xs: 16, sm: 18 },
               }}
             >
               Live Transcribe
             </Typography>
-            <IconButton onClick={() => setShowSettings(true)}>
-              <Settings />
+            <IconButton onClick={() => setShowSettings(true)} size="small">
+              <Settings fontSize="small" />
             </IconButton>
           </Toolbar>
         </AppBar>
 
-        <Container maxWidth="md" sx={{ py: { xs: 2, sm: 4 } }}>
-          <Box sx={{ maxWidth: { md: "80%", lg: "70%" }, mx: "auto" }}>
-            <Card sx={{ mb: isMobile ? 2 : 4, p: { xs: 1, sm: 2, md: 3 } }}>
+        <Container maxWidth="md" sx={{ py: { xs: 1, sm: 2 } }}>
+          <Box sx={{ maxWidth: { md: "90%", lg: "70%" }, mx: "auto" }}>
+            <Card sx={{ mb: isMobile ? 1 : 2 }}>
               <CardContent>
                 <Typography
                   variant="h6"
@@ -269,14 +366,14 @@ function App() {
                   sx={{
                     display: "flex",
                     alignItems: "center",
-                    mb: { xs: 1, sm: 3 },
+                    mb: { xs: 0.5, sm: 1 },
                   }}
                 >
-                  <Language sx={{ mr: 1 }} />
+                  <Language sx={{ mr: 1, fontSize: 18 }} />
                   Recognition Settings
                 </Typography>
 
-                <Box sx={{ mb: { xs: 2, sm: 3 } }}>
+                <Box sx={{ mb: { xs: 1, sm: 2 } }}>
                   <Typography
                     variant="body2"
                     color="text.secondary"
@@ -290,59 +387,60 @@ function App() {
                     onChange={(_, newLanguage) =>
                       newLanguage && handleLanguageChange(newLanguage)
                     }
-                    sx={{ mb: 2, flexWrap: "wrap" }}
+                    sx={{ mb: 1, flexWrap: "wrap" }}
                   >
-                    <ToggleButton value="zh-CN" sx={{ minWidth: 100 }}>
-                      中文 (Chinese)
-                    </ToggleButton>
-                    <ToggleButton value="en-US" sx={{ minWidth: 100 }}>
-                      English
-                    </ToggleButton>
-                    <ToggleButton value="zh-CN,en-US" sx={{ minWidth: 100 }}>
-                      Both
-                    </ToggleButton>
+                    <ToggleButton value="zh-CN">中文 (Chinese)</ToggleButton>
+                    <ToggleButton value="en-US">English</ToggleButton>
+                    <ToggleButton value="zh-CN,en-US">Both</ToggleButton>
                   </ToggleButtonGroup>
                 </Box>
 
-                <Divider sx={{ my: { xs: 1, sm: 2 } }} />
+                <Divider sx={{ my: { xs: 0.5, sm: 1 } }} />
 
                 <Box
                   sx={{
                     display: "flex",
-                    gap: 2,
+                    gap: 1,
                     flexWrap: "wrap",
                     flexDirection: { xs: "column", sm: "row" },
                   }}
                 >
                   <Button
-                    variant="contained"
-                    size={isMobile ? "medium" : "large"}
-                    startIcon={isRecording ? <MicOff /> : <Mic />}
+                    startIcon={
+                      isRecording ? (
+                        <MicOff fontSize="small" />
+                      ) : (
+                        <Mic fontSize="small" />
+                      )
+                    }
                     onClick={toggleRecording}
                     color={isRecording ? "secondary" : "primary"}
-                    sx={{ minWidth: { xs: 120, sm: 200 } }}
                   >
-                    {isRecording ? "Stop Recording" : "Start Recording"}
+                    {isRecording ? "Stop" : "Start"}
                   </Button>
 
                   <Button
-                    variant="outlined"
-                    size={isMobile ? "medium" : "large"}
-                    startIcon={<Clear />}
+                    startIcon={<Clear fontSize="small" />}
                     onClick={clearTranscriptions}
-                    sx={{ minWidth: { xs: 100, sm: 150 } }}
                   >
-                    Clear All
+                    Clear
                   </Button>
                 </Box>
 
                 {isRecording && (
-                  <Box sx={{ mt: 2 }}>
-                    <LinearProgress color="primary" />
+                  <Box sx={{ mt: 1 }}>
+                    <LinearProgress
+                      color="primary"
+                      sx={{ height: 4, borderRadius: 2 }}
+                    />
                     <Typography
                       variant="caption"
                       color="text.secondary"
-                      sx={{ mt: 1, display: "block" }}
+                      sx={{
+                        mt: 0.5,
+                        display: "block",
+                        fontSize: 11,
+                      }}
                     >
                       Recording in progress...
                     </Typography>
@@ -355,11 +453,15 @@ function App() {
             {currentTranscript && (
               <Alert
                 severity="info"
-                sx={{ mb: isMobile ? 2 : 3, fontSize: { xs: 14, sm: 16 } }}
+                sx={{
+                  mb: isMobile ? 1 : 2,
+                  fontSize: { xs: 13, sm: 14 },
+                  borderRadius: 2,
+                }}
               >
                 <Typography
                   variant="body1"
-                  sx={{ fontWeight: 500, fontSize: { xs: 14, sm: 16 } }}
+                  sx={{ fontWeight: 500, fontSize: { xs: 13, sm: 14 } }}
                 >
                   Listening: {currentTranscript}
                 </Typography>
@@ -368,47 +470,52 @@ function App() {
 
             {/* Transcriptions List */}
             <Card>
-              <CardContent sx={{ p: { xs: 1, sm: 2, md: 3 } }}>
+              <CardContent>
                 <Typography
                   variant="h6"
                   gutterBottom
                   sx={{
                     display: "flex",
                     alignItems: "center",
-                    fontSize: { xs: 16, sm: 20 },
+                    fontSize: { xs: 14, sm: 16 },
                   }}
                 >
-                  <RecordVoiceOver sx={{ mr: 1 }} />
+                  <RecordVoiceOver sx={{ mr: 1, fontSize: 18 }} />
                   Transcriptions
                 </Typography>
 
                 {transcriptions.length === 0 ? (
-                  <Box sx={{ textAlign: "center", py: { xs: 4, sm: 8 } }}>
+                  <Box
+                    sx={{
+                      textAlign: "center",
+                      py: { xs: 2, sm: 4 },
+                    }}
+                  >
                     <Avatar
                       sx={{
-                        width: 60,
-                        height: 60,
+                        width: 32,
+                        height: 32,
                         bgcolor: "grey.200",
                         mx: "auto",
-                        mb: 2,
+                        mb: 1,
                       }}
                     >
-                      <Mic sx={{ fontSize: 32, color: "grey.500" }} />
+                      <Mic sx={{ fontSize: 18, color: "grey.500" }} />
                     </Avatar>
                     <Typography
                       variant="h6"
                       color="text.secondary"
                       gutterBottom
-                      sx={{ fontSize: { xs: 16, sm: 20 } }}
+                      sx={{ fontSize: { xs: 13, sm: 15 } }}
                     >
                       Ready to Transcribe
                     </Typography>
                     <Typography
                       variant="body2"
                       color="text.secondary"
-                      sx={{ fontSize: { xs: 13, sm: 15 } }}
+                      sx={{ fontSize: { xs: 11, sm: 13 } }}
                     >
-                      Click "Start Recording" to begin transcribing
+                      Click "Start" to begin transcribing
                     </Typography>
                   </Box>
                 ) : (
@@ -417,39 +524,33 @@ function App() {
                       <Box key={entry.id}>
                         <ListItem alignItems="flex-start" sx={{ px: 0 }}>
                           <ListItemAvatar>
-                            <Avatar
-                              sx={{
-                                bgcolor: "success.main",
-                                width: 32,
-                                height: 32,
-                              }}
-                            >
+                            <Avatar sx={{ bgcolor: "success.main" }}>
                               <CheckCircle fontSize="small" />
                             </Avatar>
                           </ListItemAvatar>
                           <ListItemText
                             primary={
-                              <Typography
-                                variant="body1"
+                              <Box
                                 sx={{
                                   fontWeight: 500,
-                                  fontSize: { xs: 14, sm: 16 },
+                                  fontSize: { xs: 18, sm: 22 },
+                                  lineHeight: 1.7,
                                 }}
                               >
-                                {entry.text}
-                              </Typography>
+                                {renderTranscriptionText(entry.text)}
+                              </Box>
                             }
                             secondary={
                               <Box
                                 sx={{
                                   display: "flex",
                                   alignItems: "center",
-                                  mt: 1,
+                                  mt: 0.5,
                                 }}
                               >
                                 <Schedule
                                   sx={{
-                                    fontSize: 16,
+                                    fontSize: 13,
                                     mr: 0.5,
                                     color: "text.secondary",
                                   }}
@@ -457,7 +558,7 @@ function App() {
                                 <Typography
                                   variant="caption"
                                   color="text.secondary"
-                                  sx={{ fontSize: { xs: 11, sm: 13 } }}
+                                  sx={{ fontSize: { xs: 10, sm: 12 } }}
                                 >
                                   {formatTime(entry.timestamp)}
                                 </Typography>
@@ -484,18 +585,31 @@ function App() {
           maxWidth="sm"
           fullWidth
         >
-          <DialogTitle>Settings</DialogTitle>
-          <DialogContent>
-            <Typography variant="body2" color="text.secondary" paragraph>
+          <DialogTitle sx={{ fontSize: 16, fontWeight: 500, p: 1.5 }}>
+            Settings
+          </DialogTitle>
+          <DialogContent sx={{ p: 2 }}>
+            <Typography
+              variant="body2"
+              color="text.secondary"
+              paragraph
+              sx={{ fontSize: 13 }}
+            >
               Configure your speech recognition preferences and language
               settings.
             </Typography>
-            <Typography variant="body2" color="text.secondary">
+            <Typography
+              variant="body2"
+              color="text.secondary"
+              sx={{ fontSize: 13 }}
+            >
               Current language: <strong>{language}</strong>
             </Typography>
           </DialogContent>
-          <DialogActions>
-            <Button onClick={() => setShowSettings(false)}>Close</Button>
+          <DialogActions sx={{ p: 1.5 }}>
+            <Button onClick={() => setShowSettings(false)} size="small">
+              Close
+            </Button>
           </DialogActions>
         </Dialog>
 
@@ -504,15 +618,18 @@ function App() {
           color="primary"
           aria-label="record"
           onClick={toggleRecording}
+          size="small"
           sx={{
             position: "fixed",
-            bottom: { xs: 16, sm: 24 },
-            right: { xs: 16, sm: 24 },
+            bottom: { xs: 12, sm: 16 },
+            right: { xs: 12, sm: 16 },
             bgcolor: isRecording ? "secondary.main" : "primary.main",
             zIndex: 1201,
+            boxShadow: "none",
+            borderRadius: 2,
           }}
         >
-          {isRecording ? <MicOff /> : <Mic />}
+          {isRecording ? <MicOff fontSize="small" /> : <Mic fontSize="small" />}
         </Fab>
       </Box>
     </ThemeProvider>
