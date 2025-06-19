@@ -30,6 +30,8 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
+  Grid,
+  useMediaQuery,
 } from "@mui/material";
 import {
   Mic,
@@ -114,6 +116,7 @@ function App() {
   const [language, setLanguage] = useState("zh-CN");
   const [showSettings, setShowSettings] = useState(false);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
   // Add pinyin to Chinese characters with proper tone marks
   const addPinyinToChinese = (text: string): string => {
@@ -259,7 +262,11 @@ function App() {
             <Typography
               variant="h6"
               component="div"
-              sx={{ flexGrow: 1, color: "text.primary" }}
+              sx={{
+                flexGrow: 1,
+                color: "text.primary",
+                fontSize: { xs: 18, sm: 22 },
+              }}
             >
               Live Transcribe
             </Typography>
@@ -269,177 +276,224 @@ function App() {
           </Toolbar>
         </AppBar>
 
-        <Container maxWidth="lg" sx={{ py: 4 }}>
-          {/* Controls Section */}
-          <Card sx={{ mb: 4 }}>
-            <CardContent>
-              <Typography
-                variant="h6"
-                gutterBottom
-                sx={{ display: "flex", alignItems: "center", mb: 3 }}
-              >
-                <Language sx={{ mr: 1 }} />
-                Recognition Settings
-              </Typography>
-
-              <Box sx={{ mb: 3 }}>
-                <Typography variant="body2" color="text.secondary" gutterBottom>
-                  Language Selection
-                </Typography>
-                <ToggleButtonGroup
-                  value={language}
-                  exclusive
-                  onChange={(e, newLanguage) =>
-                    newLanguage && handleLanguageChange(newLanguage)
-                  }
-                  sx={{ mb: 2 }}
-                >
-                  <ToggleButton value="zh-CN">中文 (Chinese)</ToggleButton>
-                  <ToggleButton value="en-US">English</ToggleButton>
-                  <ToggleButton value="zh-CN,en-US">Both</ToggleButton>
-                </ToggleButtonGroup>
-              </Box>
-
-              <Divider sx={{ my: 2 }} />
-
-              <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
-                <Button
-                  variant="contained"
-                  size="large"
-                  startIcon={isRecording ? <MicOff /> : <Mic />}
-                  onClick={toggleRecording}
-                  color={isRecording ? "secondary" : "primary"}
-                  sx={{ minWidth: 200 }}
-                >
-                  {isRecording ? "Stop Recording" : "Start Recording"}
-                </Button>
-
-                <Button
-                  variant="outlined"
-                  size="large"
-                  startIcon={<Clear />}
-                  onClick={clearTranscriptions}
-                  sx={{ minWidth: 150 }}
-                >
-                  Clear All
-                </Button>
-              </Box>
-
-              {isRecording && (
-                <Box sx={{ mt: 2 }}>
-                  <LinearProgress color="primary" />
+        <Container maxWidth="md" sx={{ py: { xs: 2, sm: 4 } }}>
+          <Grid container spacing={isMobile ? 2 : 4} justifyContent="center">
+            <Grid item xs={12} md={10} lg={8}>
+              <Card sx={{ mb: isMobile ? 2 : 4, p: { xs: 1, sm: 2, md: 3 } }}>
+                <CardContent>
                   <Typography
-                    variant="caption"
-                    color="text.secondary"
-                    sx={{ mt: 1, display: "block" }}
-                  >
-                    Recording in progress...
-                  </Typography>
-                </Box>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Current Transcript */}
-          {currentTranscript && (
-            <Alert severity="info" sx={{ mb: 3 }}>
-              <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                Listening: {currentTranscript}
-              </Typography>
-            </Alert>
-          )}
-
-          {/* Transcriptions List */}
-          <Card>
-            <CardContent>
-              <Typography
-                variant="h6"
-                gutterBottom
-                sx={{ display: "flex", alignItems: "center" }}
-              >
-                <RecordVoiceOver sx={{ mr: 1 }} />
-                Transcriptions
-                <Chip
-                  label={transcriptions.length}
-                  size="small"
-                  color="primary"
-                  sx={{ ml: 2 }}
-                />
-              </Typography>
-
-              {transcriptions.length === 0 ? (
-                <Box sx={{ textAlign: "center", py: 8 }}>
-                  <Avatar
+                    variant="h6"
+                    gutterBottom
                     sx={{
-                      width: 80,
-                      height: 80,
-                      bgcolor: "grey.200",
-                      mx: "auto",
-                      mb: 2,
+                      display: "flex",
+                      alignItems: "center",
+                      mb: { xs: 1, sm: 3 },
                     }}
                   >
-                    <Mic sx={{ fontSize: 40, color: "grey.500" }} />
-                  </Avatar>
-                  <Typography variant="h6" color="text.secondary" gutterBottom>
-                    Ready to Transcribe
+                    <Language sx={{ mr: 1 }} />
+                    Recognition Settings
                   </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Click "Start Recording" to begin transcribing
-                  </Typography>
-                </Box>
-              ) : (
-                <List sx={{ p: 0 }}>
-                  {[...transcriptions].reverse().map((entry, index) => (
-                    <Box key={entry.id}>
-                      <ListItem alignItems="flex-start" sx={{ px: 0 }}>
-                        <ListItemAvatar>
-                          <Avatar sx={{ bgcolor: "success.main" }}>
-                            <CheckCircle />
-                          </Avatar>
-                        </ListItemAvatar>
-                        <ListItemText
-                          primary={
-                            <Typography
-                              variant="body1"
-                              sx={{ fontWeight: 500 }}
-                            >
-                              {entry.text}
-                            </Typography>
-                          }
-                          secondary={
-                            <Box
-                              sx={{
-                                display: "flex",
-                                alignItems: "center",
-                                mt: 1,
-                              }}
-                            >
-                              <Schedule
-                                sx={{
-                                  fontSize: 16,
-                                  mr: 0.5,
-                                  color: "text.secondary",
-                                }}
-                              />
-                              <Typography
-                                variant="caption"
-                                color="text.secondary"
-                              >
-                                {formatTime(entry.timestamp)}
-                              </Typography>
-                            </Box>
-                          }
-                        />
-                      </ListItem>
-                      {index < transcriptions.length - 1 && (
-                        <Divider variant="inset" component="li" />
-                      )}
+
+                  <Box sx={{ mb: { xs: 2, sm: 3 } }}>
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      gutterBottom
+                    >
+                      Language Selection
+                    </Typography>
+                    <ToggleButtonGroup
+                      value={language}
+                      exclusive
+                      onChange={(e, newLanguage) =>
+                        newLanguage && handleLanguageChange(newLanguage)
+                      }
+                      sx={{ mb: 2, flexWrap: "wrap" }}
+                    >
+                      <ToggleButton value="zh-CN" sx={{ minWidth: 100 }}>
+                        中文 (Chinese)
+                      </ToggleButton>
+                      <ToggleButton value="en-US" sx={{ minWidth: 100 }}>
+                        English
+                      </ToggleButton>
+                      <ToggleButton value="zh-CN,en-US" sx={{ minWidth: 100 }}>
+                        Both
+                      </ToggleButton>
+                    </ToggleButtonGroup>
+                  </Box>
+
+                  <Divider sx={{ my: { xs: 1, sm: 2 } }} />
+
+                  <Box
+                    sx={{
+                      display: "flex",
+                      gap: 2,
+                      flexWrap: "wrap",
+                      flexDirection: { xs: "column", sm: "row" },
+                    }}
+                  >
+                    <Button
+                      variant="contained"
+                      size={isMobile ? "medium" : "large"}
+                      startIcon={isRecording ? <MicOff /> : <Mic />}
+                      onClick={toggleRecording}
+                      color={isRecording ? "secondary" : "primary"}
+                      sx={{ minWidth: { xs: 120, sm: 200 } }}
+                    >
+                      {isRecording ? "Stop Recording" : "Start Recording"}
+                    </Button>
+
+                    <Button
+                      variant="outlined"
+                      size={isMobile ? "medium" : "large"}
+                      startIcon={<Clear />}
+                      onClick={clearTranscriptions}
+                      sx={{ minWidth: { xs: 100, sm: 150 } }}
+                    >
+                      Clear All
+                    </Button>
+                  </Box>
+
+                  {isRecording && (
+                    <Box sx={{ mt: 2 }}>
+                      <LinearProgress color="primary" />
+                      <Typography
+                        variant="caption"
+                        color="text.secondary"
+                        sx={{ mt: 1, display: "block" }}
+                      >
+                        Recording in progress...
+                      </Typography>
                     </Box>
-                  ))}
-                </List>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Current Transcript */}
+              {currentTranscript && (
+                <Alert
+                  severity="info"
+                  sx={{ mb: isMobile ? 2 : 3, fontSize: { xs: 14, sm: 16 } }}
+                >
+                  <Typography
+                    variant="body1"
+                    sx={{ fontWeight: 500, fontSize: { xs: 14, sm: 16 } }}
+                  >
+                    Listening: {currentTranscript}
+                  </Typography>
+                </Alert>
               )}
-            </CardContent>
-          </Card>
+
+              {/* Transcriptions List */}
+              <Card>
+                <CardContent sx={{ p: { xs: 1, sm: 2, md: 3 } }}>
+                  <Typography
+                    variant="h6"
+                    gutterBottom
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      fontSize: { xs: 16, sm: 20 },
+                    }}
+                  >
+                    <RecordVoiceOver sx={{ mr: 1 }} />
+                    Transcriptions
+                  </Typography>
+
+                  {transcriptions.length === 0 ? (
+                    <Box sx={{ textAlign: "center", py: { xs: 4, sm: 8 } }}>
+                      <Avatar
+                        sx={{
+                          width: 60,
+                          height: 60,
+                          bgcolor: "grey.200",
+                          mx: "auto",
+                          mb: 2,
+                        }}
+                      >
+                        <Mic sx={{ fontSize: 32, color: "grey.500" }} />
+                      </Avatar>
+                      <Typography
+                        variant="h6"
+                        color="text.secondary"
+                        gutterBottom
+                        sx={{ fontSize: { xs: 16, sm: 20 } }}
+                      >
+                        Ready to Transcribe
+                      </Typography>
+                      <Typography
+                        variant="body2"
+                        color="text.secondary"
+                        sx={{ fontSize: { xs: 13, sm: 15 } }}
+                      >
+                        Click "Start Recording" to begin transcribing
+                      </Typography>
+                    </Box>
+                  ) : (
+                    <List sx={{ p: 0 }}>
+                      {[...transcriptions].reverse().map((entry, index) => (
+                        <Box key={entry.id}>
+                          <ListItem alignItems="flex-start" sx={{ px: 0 }}>
+                            <ListItemAvatar>
+                              <Avatar
+                                sx={{
+                                  bgcolor: "success.main",
+                                  width: 32,
+                                  height: 32,
+                                }}
+                              >
+                                <CheckCircle fontSize="small" />
+                              </Avatar>
+                            </ListItemAvatar>
+                            <ListItemText
+                              primary={
+                                <Typography
+                                  variant="body1"
+                                  sx={{
+                                    fontWeight: 500,
+                                    fontSize: { xs: 14, sm: 16 },
+                                  }}
+                                >
+                                  {entry.text}
+                                </Typography>
+                              }
+                              secondary={
+                                <Box
+                                  sx={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    mt: 1,
+                                  }}
+                                >
+                                  <Schedule
+                                    sx={{
+                                      fontSize: 16,
+                                      mr: 0.5,
+                                      color: "text.secondary",
+                                    }}
+                                  />
+                                  <Typography
+                                    variant="caption"
+                                    color="text.secondary"
+                                    sx={{ fontSize: { xs: 11, sm: 13 } }}
+                                  >
+                                    {formatTime(entry.timestamp)}
+                                  </Typography>
+                                </Box>
+                              }
+                            />
+                          </ListItem>
+                          {index < transcriptions.length - 1 && (
+                            <Divider variant="inset" component="li" />
+                          )}
+                        </Box>
+                      ))}
+                    </List>
+                  )}
+                </CardContent>
+              </Card>
+            </Grid>
+          </Grid>
         </Container>
 
         {/* Settings Dialog */}
@@ -471,9 +525,10 @@ function App() {
           onClick={toggleRecording}
           sx={{
             position: "fixed",
-            bottom: 24,
-            right: 24,
+            bottom: { xs: 16, sm: 24 },
+            right: { xs: 16, sm: 24 },
             bgcolor: isRecording ? "secondary.main" : "primary.main",
+            zIndex: 1201,
           }}
         >
           {isRecording ? <MicOff /> : <Mic />}
