@@ -13,7 +13,7 @@ A professional real-time speech transcription web application built with React, 
 
 ## 🚀 Live Demo
 
-Visit the live application: **[Live Transcribe](https://banhtieu.github.io/LiveTranscribe)**
+Visit the live application: **[Live Transcribe](https://tuoitrevohoc.github.io/LiveTranscribe)**
 
 ## 📱 Example
 
